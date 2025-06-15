@@ -1,4 +1,4 @@
-package me.anjoismysign.psa;
+package io.github.anjoismysign.psa;
 
 import org.jetbrains.annotations.NotNull;
 

@@ -1,10 +1,11 @@
-package me.anjoismysign.psa.crud;
+package io.github.anjoismysign.psa.crud;
+
+import io.github.anjoismysign.psa.lehmapp.LehmappCrudable;
+import io.github.anjoismysign.psa.lehmapp.LehmappSerializable;
+import io.github.anjoismysign.psa.serializablemanager.SerializableManager;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
-import me.anjoismysign.psa.lehmapp.LehmappCrudable;
-import me.anjoismysign.psa.lehmapp.LehmappSerializable;
-import me.anjoismysign.psa.serializablemanager.SerializableManager;
-import org.jetbrains.annotations.NotNull;
 
 public interface CrudDatabaseCredentials extends DatabaseCredentials {
   @NotNull

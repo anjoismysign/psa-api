@@ -1,9 +1,10 @@
-package me.anjoismysign.psa.crud;
+package io.github.anjoismysign.psa.crud;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.logging.Logger;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public interface DatabaseCredentials {
   @NotNull

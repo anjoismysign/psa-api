@@ -1,4 +1,4 @@
-package me.anjoismysign.psa.crud;
+package io.github.anjoismysign.psa.crud;
 
 import java.sql.Connection;
 import java.util.function.BiConsumer;

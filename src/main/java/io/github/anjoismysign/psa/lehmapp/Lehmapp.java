@@ -1,4 +1,7 @@
-package me.anjoismysign.psa.lehmapp;
+package io.github.anjoismysign.psa.lehmapp;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -7,8 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class Lehmapp implements Map<String, Object>, Serializable {
   private static final long serialVersionUID = 7828118618100017483L;

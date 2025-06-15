@@ -1,11 +1,12 @@
-package me.anjoismysign.psa.crud;
+package io.github.anjoismysign.psa.crud;
+
+import io.github.anjoismysign.psa.UpdatableSerializableHandler;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.UUID;
 import java.util.logging.Logger;
-import me.anjoismysign.psa.UpdatableSerializableHandler;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public interface CrudManager<T extends Serializable> {
   @NotNull

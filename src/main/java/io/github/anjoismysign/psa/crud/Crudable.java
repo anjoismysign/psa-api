@@ -1,7 +1,8 @@
-package me.anjoismysign.psa.crud;
+package io.github.anjoismysign.psa.crud;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
-import org.jetbrains.annotations.NotNull;
 
 public interface Crudable extends Serializable {
   @NotNull

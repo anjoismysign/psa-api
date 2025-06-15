@@ -1,6 +1,6 @@
-package me.anjoismysign.psa.serializablemanager;
+package io.github.anjoismysign.psa.serializablemanager;
 
-import me.anjoismysign.psa.lehmapp.LehmappSerializable;
+import io.github.anjoismysign.psa.lehmapp.LehmappSerializable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

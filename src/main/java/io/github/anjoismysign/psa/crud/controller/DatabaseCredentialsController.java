@@ -1,11 +1,13 @@
-package me.anjoismysign.psa.crud.controller;
+package io.github.anjoismysign.psa.crud.controller;
 
-import java.util.function.Function;
-import me.anjoismysign.psa.crud.CrudDatabase;
-import me.anjoismysign.psa.crud.CrudManager;
+import io.github.anjoismysign.psa.crud.CrudDatabase;
+import io.github.anjoismysign.psa.crud.CrudManager;
+import io.github.anjoismysign.psa.crud.Crudable;
 import org.jetbrains.annotations.NotNull;
 
-public interface DatabaseCredentialsController<T extends me.anjoismysign.psa.crud.Crudable> {
+import java.util.function.Function;
+
+public interface DatabaseCredentialsController<T extends Crudable> {
   @NotNull
   CrudDatabase getCredentials();
   

@@ -1,4 +1,4 @@
-package me.anjoismysign.psa.lehmapp;
+package io.github.anjoismysign.psa.lehmapp;
 
 import org.jetbrains.annotations.NotNull;
 

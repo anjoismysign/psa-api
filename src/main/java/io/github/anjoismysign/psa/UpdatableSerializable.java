@@ -1,5 +1,9 @@
-package me.anjoismysign.psa;
+package io.github.anjoismysign.psa;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import javax.sql.rowset.serial.SerialBlob;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,9 +15,6 @@ import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Optional;
-import javax.sql.rowset.serial.SerialBlob;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public interface UpdatableSerializable<T extends Serializable> extends Serializable {
   static byte[] serialize(UpdatableSerializable updatableSerializable) {

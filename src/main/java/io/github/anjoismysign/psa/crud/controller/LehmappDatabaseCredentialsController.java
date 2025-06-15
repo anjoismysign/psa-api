@@ -1,10 +1,11 @@
-package me.anjoismysign.psa.crud.controller;
+package io.github.anjoismysign.psa.crud.controller;
+
+import io.github.anjoismysign.psa.crud.CrudDatabase;
+import io.github.anjoismysign.psa.crud.CrudManager;
+import io.github.anjoismysign.psa.lehmapp.LehmappCrudable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
-import me.anjoismysign.psa.crud.CrudDatabase;
-import me.anjoismysign.psa.crud.CrudManager;
-import me.anjoismysign.psa.lehmapp.LehmappCrudable;
-import org.jetbrains.annotations.NotNull;
 
 public record LehmappDatabaseCredentialsController(@NotNull CrudDatabase getCredentials,
                                                    @NotNull Function<String, LehmappCrudable> getCreateFunction,

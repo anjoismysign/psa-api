@@ -1,8 +1,9 @@
-package me.anjoismysign.psa.lehmapp;
+package io.github.anjoismysign.psa.lehmapp;
+
+import io.github.anjoismysign.psa.crud.Crudable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
-import me.anjoismysign.psa.crud.Crudable;
-import org.jetbrains.annotations.NotNull;
 
 public final class LehmappCrudable implements Crudable {
   private final String id;
