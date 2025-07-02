@@ -21,8 +21,6 @@ public interface SQLCrudManager<T extends Crudable> extends CrudManager<T> {
   
   boolean exists(String paramString);
   
-  void update(T paramT, int paramInt);
-  
   default void forEachRecord(Consumer<T> consumer) {
     forEachRecord((crudable, version) -> consumer.accept(crudable));
   }

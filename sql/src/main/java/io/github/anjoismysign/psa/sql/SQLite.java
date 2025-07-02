@@ -10,10 +10,14 @@ public final class SQLite extends SQLDatabase {
         File file = new File(directory, this.database.endsWith(".db") ? this.database : this.database + ".db");
 
         try {
-            if (!file.exists()) {
+            if (!file.isFile()) {
+                File parent = file.getParentFile();
+                if (parent.exists())
+                    parent.mkdirs();
                 file.createNewFile();
             }
         } catch (Exception var6) {
+            System.err.println("At: "+file.getAbsolutePath());
             var6.printStackTrace();
         }
 

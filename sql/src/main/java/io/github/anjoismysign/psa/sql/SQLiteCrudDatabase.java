@@ -13,23 +13,31 @@ import java.util.Locale;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-public record SQLiteCrudDatabase(
+public record SQLiteCrudDatabase<T extends Crudable>(
         @NotNull String getName,
         @NotNull File getDirectory,
         @NotNull String getTableName,
         @NotNull String getPrimaryKeyName,
         int getPrimaryKeyLength,
         @NotNull String getCrudableKeyTypeName,
-        @Nullable Logger getLogger
-) implements SQLCrudDatabase {
-    public static <T extends Crudable> SQLiteCrudDatabase of(@NotNull Class<T> type, @NotNull DatabaseCredentials databaseCredentials) {
+        @Nullable Logger getLogger,
+        @NotNull Class<T> type
+) implements SQLCrudDatabase<T> {
+    public static <T extends Crudable> SQLiteCrudDatabase<T> of(@NotNull Class<T> type, @NotNull DatabaseCredentials databaseCredentials) {
         String name = type.getSimpleName();
         String tableName = "tbl" + NamingConventions.toPascalCase(name) + "s";
         String crudableTypeName = name.toUpperCase(Locale.ROOT);
         int primaryKeyLength = 36;
         String primaryKeyName = "UUID";
-        return new SQLiteCrudDatabase(
-                "database", databaseCredentials.getDirectory(), tableName, primaryKeyName, primaryKeyLength, crudableTypeName, databaseCredentials.getLogger()
+        return new SQLiteCrudDatabase<>(
+                "database",
+                databaseCredentials.getDirectory(),
+                tableName,
+                primaryKeyName,
+                primaryKeyLength,
+                crudableTypeName,
+                databaseCredentials.getLogger(),
+                type
         );
     }
 
@@ -51,7 +59,7 @@ public record SQLiteCrudDatabase(
     }
 
     @NotNull
-    public <T extends Crudable> SQLCrudManager<T> crudManagerOf(@NotNull Function<String, T> createFunction) {
+    public SQLCrudManager<T> crudManagerOf(@NotNull Function<String, T> createFunction) {
         return new SQLiteCrudManager<>(this, createFunction);
     }
 }

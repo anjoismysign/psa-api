@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-public record MySQLCrudDatabase(
+public record MySQLCrudDatabase<T extends Crudable>(
         @NotNull String getHostName,
         int getPort,
         @NotNull String getDatabase,
@@ -22,9 +22,10 @@ public record MySQLCrudDatabase(
         @NotNull String getPrimaryKeyName,
         int getPrimaryKeyLength,
         @NotNull String getCrudableKeyTypeName,
-        @Nullable Logger getLogger
-) implements SQLCrudDatabase {
-    public static <T extends Crudable> MySQLCrudDatabase of(@NotNull Class<T> type, @NotNull DatabaseCredentials databaseCredentials) {
+        @Nullable Logger getLogger,
+        @NotNull Class<T> type
+) implements SQLCrudDatabase<T> {
+    public static <T extends Crudable> MySQLCrudDatabase<T> of(@NotNull Class<T> type, @NotNull DatabaseCredentials databaseCredentials) {
         if (databaseCredentials.isLocalhost()) {
             throw new IllegalStateException("'databaseCredentials' is meant to be used as localhost");
         } else {
@@ -33,7 +34,7 @@ public record MySQLCrudDatabase(
             String crudableKeyTypeName = name.toUpperCase(Locale.ROOT);
             int primaryKeyLength = 36;
             String primaryKeyName = databaseCredentials.getIdentifier().name().replace("-", "");
-            return new MySQLCrudDatabase(
+            return new MySQLCrudDatabase<>(
                     databaseCredentials.getHostname(),
                     databaseCredentials.getPort(),
                     databaseCredentials.getDatabase(),
@@ -43,7 +44,8 @@ public record MySQLCrudDatabase(
                     primaryKeyName,
                     primaryKeyLength,
                     crudableKeyTypeName,
-                    databaseCredentials.getLogger()
+                    databaseCredentials.getLogger(),
+                    type
             );
         }
     }
@@ -66,7 +68,7 @@ public record MySQLCrudDatabase(
     }
 
     @NotNull
-    public <T extends Crudable> SQLCrudManager<T> crudManagerOf(@NotNull Function<String, T> createFunction) {
+    public SQLCrudManager<T> crudManagerOf(@NotNull Function<String, T> createFunction) {
         return new MySQLCrudManager<>(this, createFunction);
     }
 }

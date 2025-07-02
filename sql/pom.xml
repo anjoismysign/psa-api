@@ -38,7 +38,11 @@
             <groupId>io.github.anjoismysign</groupId>
             <artifactId>aesthetic</artifactId>
             <version>1.0</version>
-            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.13.1</version>
         </dependency>
     </dependencies>
 

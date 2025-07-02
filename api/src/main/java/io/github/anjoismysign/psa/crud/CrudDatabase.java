@@ -6,10 +6,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-public interface CrudDatabase {
+public interface CrudDatabase<T extends Crudable> {
   @Nullable
   Logger getLogger();
   
   @NotNull
-  <T extends Crudable> CrudManager<T> crudManagerOf(@NotNull Function<String, T> paramFunction);
+  CrudManager<T> crudManagerOf(@NotNull Function<String, T> paramFunction);
 }
