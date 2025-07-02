@@ -40,6 +40,6 @@ public interface DatabaseCredentials {
   }
   
   enum Identifier {
-    UUID, PLAYER_NAME;
+    UUID, USER_NAME;
   }
 }
