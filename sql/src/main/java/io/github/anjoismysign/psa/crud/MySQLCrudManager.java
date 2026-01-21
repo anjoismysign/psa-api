@@ -2,6 +2,7 @@ package io.github.anjoismysign.psa.crud;
 
 import com.google.gson.Gson;
 import io.github.anjoismysign.psa.PostLoadable;
+import io.github.anjoismysign.psa.PreUpdatable;
 import io.github.anjoismysign.psa.UpdatableSerializable;
 import io.github.anjoismysign.psa.sql.MySQLCrudDatabase;
 import io.github.anjoismysign.psa.sql.SQLContainer;
@@ -10,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -83,6 +83,9 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
     }
 
     public void update(T crudable) {
+        if (crudable instanceof PreUpdatable preUpdatable){
+            preUpdatable.onPreUpdate();
+        }
         Gson gson = new Gson();
         String jsonString = gson.toJson(crudable);
         String id = crudable.getIdentification();

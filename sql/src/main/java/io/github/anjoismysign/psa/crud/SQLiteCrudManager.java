@@ -2,6 +2,7 @@ package io.github.anjoismysign.psa.crud;
 
 import com.google.gson.Gson;
 import io.github.anjoismysign.psa.PostLoadable;
+import io.github.anjoismysign.psa.PreUpdatable;
 import io.github.anjoismysign.psa.UpdatableSerializable;
 import io.github.anjoismysign.psa.sql.SQLContainer;
 import io.github.anjoismysign.psa.sql.SQLiteCrudDatabase;
@@ -10,7 +11,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
@@ -83,13 +83,15 @@ public class SQLiteCrudManager<T extends Crudable> implements SQLCrudManager<T> 
     }
 
     public void update(T crudable) {
+        if (crudable instanceof PreUpdatable preUpdatable){
+            preUpdatable.onPreUpdate();
+        }
         Gson gson = new Gson();
         String jsonString = gson.toJson(crudable);
         String id = crudable.getIdentification();
         PreparedStatement statement = this.container
                 .getDatabase()
                 .updateDataSet(this.getPrimaryKeyName(), this.getTableName(), this.crudableKeyTypePrepareStatement());
-
         try {
             statement.setString(1, jsonString);
             statement.setString(2, id);
@@ -128,7 +130,6 @@ public class SQLiteCrudManager<T extends Crudable> implements SQLCrudManager<T> 
 
     public T create(String identification) {
         T crudable = this.createFunction.apply(identification);
-
         String sql = "INSERT OR IGNORE INTO " + this.getTableName();
         try (Connection connection = this.container.getDatabase().getConnection()) {
             PreparedStatement preparedStatement = connection.prepareStatement(sql + " (" + this.getPrimaryKeyName() + ") VALUES (?)");
@@ -137,7 +138,6 @@ public class SQLiteCrudManager<T extends Crudable> implements SQLCrudManager<T> 
                 preparedStatement.executeUpdate();
                 this.log("Created new record with id " + identification + ".");
             }
-
             if (preparedStatement != null) {
                 preparedStatement.close();
             }
