@@ -1,6 +1,7 @@
 package io.github.anjoismysign.psa.crud;
 
 import com.google.gson.Gson;
+import io.github.anjoismysign.psa.PostLoadable;
 import io.github.anjoismysign.psa.UpdatableSerializable;
 import io.github.anjoismysign.psa.sql.MySQLCrudDatabase;
 import io.github.anjoismysign.psa.sql.SQLContainer;
@@ -11,6 +12,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -138,7 +140,6 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
 
             if (preparedStatement != null) {
                 preparedStatement.close();
-                preparedStatement.getConnection().close();
             }
         } catch (SQLException var14) {
             var14.printStackTrace();
@@ -182,39 +183,26 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
     }
 
     private T readOrGenerate(String id, Supplier<T> replacement) {
-        ResultSet resultSet = this.container.getDatabase().selectRowByPrimaryKey(this.getPrimaryKeyName(), id, this.getTableName());
-
-        Crudable var7;
-        try {
-            if (!resultSet.next()) {
-                this.log("Record with id " + id + " does not exist.");
-                resultSet.close();
-                resultSet.getStatement().close();
-                resultSet.getStatement().getConnection().close();
-                return replacement.get();
-            }
-
-            String jsonString = resultSet.getString(this.getCrudableKeyTypeName());
-            resultSet.close();
-            resultSet.getStatement().close();
-            resultSet.getStatement().getConnection().close();
-            Gson gson = new Gson();
-            T crudable = gson.fromJson(jsonString, database.type());
-            this.log("Read record with id " + id + " successfully.");
-            var7 = crudable;
-        } catch (SQLException var18) {
-            var18.printStackTrace();
-            return replacement.get();
-        } finally {
+        AtomicReference<T> result = new AtomicReference<>();
+        this.container.getDatabase().selectRowByPrimaryKey(this.getPrimaryKeyName(), id, this.getTableName(), resultSet -> {
             try {
-                resultSet.getStatement().close();
-                resultSet.getStatement().getConnection().close();
-            } catch (SQLException var17) {
-                var17.printStackTrace();
+                String jsonString = resultSet.getString(this.getCrudableKeyTypeName());
+                Gson gson = new Gson();
+                T crudable = gson.fromJson(jsonString, database.type());
+                if (crudable instanceof PostLoadable postLoadable) {
+                    postLoadable.onPostLoad();
+                }
+                this.log("Read record with id " + id + " successfully.");
+                result.set(crudable);
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
+        });
+        if (result.get() != null) {
+            return result.get();
         }
-
-        return (T) var7;
+        this.log("Record with id " + id + " does not exist (or error occurred).");
+        return replacement.get();
     }
 
     private void log(@NotNull String message) {

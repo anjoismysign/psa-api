@@ -6,8 +6,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -19,12 +17,10 @@ public abstract class SQLDatabase {
     protected final String user;
     protected final String password;
     protected final HikariDataSource dataSource;
-    protected final ThreadPoolExecutor executor;
 
     protected SQLDatabase(String hostName, int port, String database, String user, String password, Logger logger) {
         this.logger = logger;
         this.dataSource = new HikariDataSource();
-        this.executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         this.database = database;
         this.hostName = hostName;
         this.port = port;
@@ -42,7 +38,6 @@ public abstract class SQLDatabase {
 
     public final void disconnect() {
         try {
-            this.executor.shutdown();
             this.dataSource.close();
         } catch (Exception var2) {
             var2.printStackTrace();
@@ -53,15 +48,18 @@ public abstract class SQLDatabase {
         return this.database;
     }
 
-    public ResultSet selectRowByPrimaryKey(String keyType, String key, String table) {
-        try {
-            Connection connection = this.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE " + keyType + "=?");
-            preparedStatement.setString(1, key);
-            return preparedStatement.executeQuery();
-        } catch (SQLException var6) {
-            var6.printStackTrace();
-            return null;
+    public void selectRowByPrimaryKey(String keyType, String key, String table, Consumer<ResultSet> action) {
+        String sql = "SELECT * FROM " + table + " WHERE " + keyType + "=?";
+        try (Connection connection = this.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, key);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    action.accept(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -86,71 +84,45 @@ public abstract class SQLDatabase {
     }
 
     public boolean createTable(String table, String columns, String primaryKey) {
-        Connection connection = null;
-
-        boolean exception;
-        try {
-            connection = this.getConnection();
-            if (connection != null) {
-                PreparedStatement preparedStatement = connection.prepareStatement(
-                        "CREATE TABLE IF NOT EXISTS " + table + " (" + columns + ",PRIMARY KEY(" + primaryKey + "))"
-                );
+        try (Connection connection = this.getConnection()) {
+            if (connection == null) {
+                return false;
+            }
+            String sql = "CREATE TABLE IF NOT EXISTS " + table + " (" + columns + ",PRIMARY KEY(" + primaryKey + "))";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.executeUpdate();
-                preparedStatement.close();
                 return true;
             }
-
-            exception = false;
-        } catch (SQLException var17) {
-            var17.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
             return false;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException var16) {
-                var16.printStackTrace();
-            }
         }
-
-        return exception;
     }
 
     public boolean exists(String table, String keyType, String key) {
-        Connection connection = null;
-
-        try {
-            connection = this.getConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM " + table + " WHERE " + keyType + "='" + key + "'");
-            return preparedStatement.executeQuery().next();
-        } catch (SQLException var16) {
-            var16.printStackTrace();
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException var15) {
-                    var15.printStackTrace();
-                }
+        String sql = "SELECT * FROM " + table + " WHERE " + keyType + "=?";
+        try (Connection connection = this.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, key);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                return rs.next();
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
-
-        return false;
     }
 
     public void selectAllFromDatabase(String table, Consumer<ResultSet> forEach) {
-        try {
-            PreparedStatement statement = this.getConnection().prepareStatement("select * from " + table);
-            ResultSet resultSet = statement.executeQuery();
+        String sql = "select * from " + table;
+        try (Connection connection = this.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
                 forEach.accept(resultSet);
             }
 
-            resultSet.close();
-            statement.close();
-            statement.getConnection().close();
         } catch (SQLException var5) {
             var5.printStackTrace();
         }
