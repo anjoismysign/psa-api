@@ -71,6 +71,11 @@ public class SQLiteCrudManager<T extends Crudable> implements SQLCrudManager<T> 
         return this.container.getDatabase().getConnection();
     }
 
+    @Override
+    public void disconnect() {
+        this.container.disconnect();
+    }
+
     public boolean exists(String id) {
         boolean exists = this.container.getDatabase().exists(this.getTableName(), this.getPrimaryKeyName(), id);
         if (exists) {
