@@ -44,17 +44,12 @@ public record SQLiteCrudDatabase<T extends Crudable>(
     @NotNull
     @Override
     public SQLContainer generateContainer() {
-        final SQLDatabase database = new SQLite(this.getName, this.getDirectory, this.getLogger);
+        String key = SQLDatabaseRegistry.keyFor(this.getDirectory, this.getName);
+        SQLDatabase database = SQLDatabaseRegistry.acquire(key,
+                () -> new SQLite(this.getName, this.getDirectory, this.getLogger));
         return new SQLContainer() {
-            @Override
-            public SQLDatabase getDatabase() {
-                return database;
-            }
-
-            @Override
-            public void disconnect() {
-                database.disconnect();
-            }
+            @Override public SQLDatabase getDatabase() { return database; }
+            @Override public void disconnect() { SQLDatabaseRegistry.release(key); }
         };
     }
 

@@ -53,17 +53,14 @@ public record MySQLCrudDatabase<T extends Crudable>(
     @NotNull
     @Override
     public SQLContainer generateContainer() {
-        final SQLDatabase database = new MySQL(this.getHostName, this.getPort, this.getDatabase, this.getUser, this.getPassword, this.getLogger);
+        String key = SQLDatabaseRegistry.keyFor(this.getHostName, this.getPort, this.getDatabase, this.getUser);
+        SQLDatabase database = SQLDatabaseRegistry.acquire(key,
+                () -> new MySQL(this.getHostName, this.getPort,
+                        this.getDatabase, this.getUser,
+                        this.getPassword, this.getLogger));
         return new SQLContainer() {
-            @Override
-            public SQLDatabase getDatabase() {
-                return database;
-            }
-
-            @Override
-            public void disconnect() {
-                database.disconnect();
-            }
+            @Override public SQLDatabase getDatabase() { return database; }
+            @Override public void disconnect() { SQLDatabaseRegistry.release(key); }
         };
     }
 
