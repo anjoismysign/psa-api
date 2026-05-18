@@ -12,7 +12,7 @@ public final class SQLite extends SQLDatabase {
         try {
             if (!file.isFile()) {
                 File parent = file.getParentFile();
-                if (parent.exists())
+                if (parent != null && !parent.exists())
                     parent.mkdirs();
                 file.createNewFile();
             }

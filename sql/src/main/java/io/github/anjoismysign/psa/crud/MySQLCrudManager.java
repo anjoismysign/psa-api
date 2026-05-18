@@ -23,6 +23,8 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
     private final MySQLCrudDatabase<T> database;
     private SQLContainer container;
 
+    private static final Gson GSON = new Gson();
+
     public MySQLCrudManager(@NotNull MySQLCrudDatabase<T> database, @NotNull Function<String, T> createFunction) {
         this.createFunction = createFunction;
         this.database = database;
@@ -44,7 +46,7 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
                             + this.getTableName()
                             + " with primary key "
                             + this.getPrimaryKeyName()
-                            + "and type "
+                            + " and type "
                             + this.getCrudableKeyTypeName()
                             + " was executed successfully."
             );
@@ -88,42 +90,34 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
     }
 
     public void update(T crudable) {
-        if (crudable instanceof PreUpdatable preUpdatable){
+        if (crudable instanceof PreUpdatable preUpdatable) {
             preUpdatable.onPreUpdate();
         }
-        Gson gson = new Gson();
-        String jsonString = gson.toJson(crudable);
+        String jsonString = GSON.toJson(crudable);
         String id = crudable.getIdentification();
-        PreparedStatement statement = this.container
-                .getDatabase()
-                .updateDataSet(this.getPrimaryKeyName(), this.getTableName(), this.crudableKeyTypePrepareStatement());
-
-        try {
+        String sql = "UPDATE " + getTableName()
+                + " SET " + crudableKeyTypePrepareStatement()
+                + " WHERE " + getPrimaryKeyName() + "=?";
+        try (Connection connection = container.getDatabase().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, jsonString);
             statement.setString(2, id);
             statement.executeUpdate();
-        } catch (SQLException var15) {
-            var15.printStackTrace();
-        } finally {
-            try {
-                statement.close();
-                statement.getConnection().close();
-            } catch (SQLException var14) {
-                var14.printStackTrace();
-            }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
         }
     }
 
     public void forEachRecord(BiConsumer<T, Integer> biConsumer) {
-        this.container.getDatabase().selectAllFromDatabase(this.getTableName(), resultSet -> {
+        container.getDatabase().selectAllFromDatabase(getTableName(), resultSet -> {
             try {
-                byte[] bytes = resultSet.getBytes(this.getCrudableKeyTypeName());
-                UpdatableSerializable<T> updatableSerializable = UpdatableSerializable.deserialize(bytes);
-                T crudable = updatableSerializable.getValue();
-                this.log("Read record with id " + crudable.getIdentification() + ".");
-                biConsumer.accept(crudable, updatableSerializable.getVersion());
-            } catch (SQLException var6) {
-                var6.printStackTrace();
+                String jsonString = resultSet.getString(getCrudableKeyTypeName());
+                T crudable = GSON.fromJson(jsonString, database.type());
+                if (crudable instanceof PostLoadable postLoadable) postLoadable.onPostLoad();
+                log("Read record with id " + crudable.getIdentification() + ".");
+                biConsumer.accept(crudable, 0);
+            } catch (SQLException exception) {
+                exception.printStackTrace();
             }
         });
     }
@@ -135,24 +129,17 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
     }
 
     public T create(String identification) {
-        T crudable = this.createFunction.apply(identification);
-
-        String sql = "INSERT IGNORE INTO " + this.getTableName();
-        try (Connection connection = this.container.getDatabase().getConnection()) {
-            PreparedStatement preparedStatement = connection.prepareStatement(sql + " (" + this.getPrimaryKeyName() + ") VALUES (?)");
-            if (!this.exists(identification)) {
-                preparedStatement.setString(1, identification);
-                preparedStatement.executeUpdate();
-                this.log("Created new record with id " + identification + ".");
-            }
-
-            if (preparedStatement != null) {
-                preparedStatement.close();
-            }
-        } catch (SQLException var14) {
-            var14.printStackTrace();
+        T crudable = createFunction.apply(identification);
+        String sql = "INSERT IGNORE INTO " + getTableName()
+                + " (" + getPrimaryKeyName() + ") VALUES (?)";
+        try (Connection connection = container.getDatabase().getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, identification);
+            int rows = preparedStatement.executeUpdate();
+            if (rows > 0) log("Created new record with id " + identification + ".");
+        } catch (SQLException exception) {
+            exception.printStackTrace();
         }
-
         return crudable;
     }
 
@@ -167,21 +154,15 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
     }
 
     public void delete(String id) {
-        PreparedStatement preparedStatement = this.container.getDatabase().delete(this.getTableName(), this.getPrimaryKeyName());
-
-        try {
-            preparedStatement.setString(1, id);
-            preparedStatement.executeUpdate();
-            this.log("Deleted record with id " + id + ".");
-        } catch (SQLException var12) {
-            var12.printStackTrace();
-        } finally {
-            try {
-                preparedStatement.close();
-                preparedStatement.getConnection().close();
-            } catch (SQLException var11) {
-                var11.printStackTrace();
-            }
+        String sql = "DELETE FROM " + getTableName()
+                + " WHERE " + getPrimaryKeyName() + "=?";
+        try (Connection connection = container.getDatabase().getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, id);
+            statement.executeUpdate();
+            log("Deleted record with id " + id + ".");
+        } catch (SQLException exception) {
+            exception.printStackTrace();
         }
     }
 
@@ -195,8 +176,7 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
         this.container.getDatabase().selectRowByPrimaryKey(this.getPrimaryKeyName(), id, this.getTableName(), resultSet -> {
             try {
                 String jsonString = resultSet.getString(this.getCrudableKeyTypeName());
-                Gson gson = new Gson();
-                T crudable = gson.fromJson(jsonString, database.type());
+                T crudable = GSON.fromJson(jsonString, database.type());
                 if (crudable instanceof PostLoadable postLoadable) {
                     postLoadable.onPostLoad();
                 }

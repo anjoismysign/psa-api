@@ -12,10 +12,13 @@ public final class SQLDatabaseRegistry {
     private static final Map<String, Entry> registry = new ConcurrentHashMap<>();
 
     public static SQLDatabase acquire(String key, Supplier<SQLDatabase> factory) {
-        Entry entry = registry.computeIfAbsent(key,
-                k -> new Entry(factory.get(), new AtomicInteger(0)));
-        entry.count().incrementAndGet();
-        return entry.database();
+        return registry.compute(key, (k, existing) -> {
+            if (existing == null) {
+                return new Entry(factory.get(), new AtomicInteger(1));
+            }
+            existing.count().incrementAndGet();
+            return existing;
+        }).database();
     }
 
     public static void release(String key) {
