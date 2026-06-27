@@ -56,7 +56,7 @@ public record SQLDatabaseCredentials(
             Identifier identifier = Identifier.valueOf(scheme.toUpperCase());
 
             String database = uri.getPath();
-            if (database == null || database.isBlank()) {
+            if (database == null || database.isEmpty()) {
                 throw new IllegalArgumentException("Connection string must specify a database.");
             }
             if (database.startsWith("/")) {
