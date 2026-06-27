@@ -11,6 +11,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
@@ -44,5 +46,46 @@ public record SQLDatabaseCredentials(
     @NotNull
     public <T extends LehmappSerializable> SerializableManager<T> getSerializableManager(@NotNull Class<T> type, @NotNull Function<LehmappCrudable, T> function) {
         return new SimpleSerializableManager(this, function);
+    }
+
+    public static SQLDatabaseCredentials ofConnectionString(@NotNull String string) {
+        try {
+            URI uri = new URI(string);
+
+            String scheme = uri.getScheme();
+            Identifier identifier = Identifier.valueOf(scheme.toUpperCase());
+
+            String database = uri.getPath();
+            if (database == null || database.isBlank()) {
+                throw new IllegalArgumentException("Connection string must specify a database.");
+            }
+            if (database.startsWith("/")) {
+                database = database.substring(1);
+            }
+
+            String username = null;
+            String password = null;
+
+            if (uri.getUserInfo() != null) {
+                String[] split = uri.getUserInfo().split(":", 2);
+                username = split[0];
+                if (split.length == 2) {
+                    password = split[1];
+                }
+            }
+
+            return new SQLDatabaseCredentials(
+                    database,
+                    identifier,
+                    null,
+                    uri.getHost(),
+                    uri.getPort(),
+                    username,
+                    password,
+                    null
+            );
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid SQL connection string: " + string, e);
+        }
     }
 }

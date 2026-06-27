@@ -25,6 +25,7 @@ public record MySQLCrudDatabase<T extends Crudable>(
         @Nullable Logger getLogger,
         @NotNull Class<T> type
 ) implements SQLCrudDatabase<T> {
+
     public static <T extends Crudable> MySQLCrudDatabase<T> of(@NotNull Class<T> type, @NotNull DatabaseCredentials databaseCredentials) {
         if (databaseCredentials.isLocalhost()) {
             throw new IllegalStateException("'databaseCredentials' is meant to be used as localhost");

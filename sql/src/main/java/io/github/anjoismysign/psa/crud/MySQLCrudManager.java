@@ -3,7 +3,6 @@ package io.github.anjoismysign.psa.crud;
 import com.google.gson.Gson;
 import io.github.anjoismysign.psa.PostLoadable;
 import io.github.anjoismysign.psa.PreUpdatable;
-import io.github.anjoismysign.psa.UpdatableSerializable;
 import io.github.anjoismysign.psa.sql.MySQLCrudDatabase;
 import io.github.anjoismysign.psa.sql.SQLContainer;
 import org.jetbrains.annotations.NotNull;
