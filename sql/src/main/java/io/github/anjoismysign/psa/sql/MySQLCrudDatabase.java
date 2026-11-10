@@ -25,6 +25,7 @@ public record MySQLCrudDatabase<T extends Crudable>(
         @Nullable Logger getLogger,
         @NotNull Class<T> type
 ) implements SQLCrudDatabase<T> {
+
     public static <T extends Crudable> MySQLCrudDatabase<T> of(@NotNull Class<T> type, @NotNull DatabaseCredentials databaseCredentials) {
         if (databaseCredentials.isLocalhost()) {
             throw new IllegalStateException("'databaseCredentials' is meant to be used as localhost");
@@ -32,7 +33,8 @@ public record MySQLCrudDatabase<T extends Crudable>(
             String name = type.getSimpleName();
             String tableName = "tbl" + NamingConventions.toPascalCase(name) + "s";
             String crudableKeyTypeName = name.toUpperCase(Locale.ROOT);
-            int primaryKeyLength = 36;
+            // profile identifications are 'account:profile', two UUIDs long
+            int primaryKeyLength = 128;
             String primaryKeyName = databaseCredentials.getIdentifier().name().replace("-", "");
             return new MySQLCrudDatabase<>(
                     databaseCredentials.getHostname(),
@@ -53,17 +55,14 @@ public record MySQLCrudDatabase<T extends Crudable>(
     @NotNull
     @Override
     public SQLContainer generateContainer() {
-        final SQLDatabase database = new MySQL(this.getHostName, this.getPort, this.getDatabase, this.getUser, this.getPassword, this.getLogger);
+        String key = SQLDatabaseRegistry.keyFor(this.getHostName, this.getPort, this.getDatabase, this.getUser);
+        SQLDatabase database = SQLDatabaseRegistry.acquire(key,
+                () -> new MySQL(this.getHostName, this.getPort,
+                        this.getDatabase, this.getUser,
+                        this.getPassword, this.getLogger));
         return new SQLContainer() {
-            @Override
-            public SQLDatabase getDatabase() {
-                return database;
-            }
-
-            @Override
-            public void disconnect() {
-                database.disconnect();
-            }
+            @Override public SQLDatabase getDatabase() { return database; }
+            @Override public void disconnect() { SQLDatabaseRegistry.release(key); }
         };
     }
 

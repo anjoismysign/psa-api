@@ -63,26 +63,6 @@ public abstract class SQLDatabase {
         }
     }
 
-    public PreparedStatement updateDataSet(String keyType, String table, String values) {
-        try {
-            Connection connection = this.getConnection();
-            return connection.prepareStatement("UPDATE " + table + " SET " + values + " WHERE " + keyType + "=?");
-        } catch (SQLException var6) {
-            var6.printStackTrace();
-            return null;
-        }
-    }
-
-    public PreparedStatement delete(String table, String keyType) {
-        try {
-            Connection connection = this.getConnection();
-            return connection.prepareStatement("DELETE FROM " + table + " WHERE " + keyType + "=?");
-        } catch (SQLException var5) {
-            var5.printStackTrace();
-            return null;
-        }
-    }
-
     public boolean createTable(String table, String columns, String primaryKey) {
         try (Connection connection = this.getConnection()) {
             if (connection == null) {
