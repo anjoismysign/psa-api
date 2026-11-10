@@ -36,9 +36,19 @@ public class MySQLCrudManager<T extends Crudable> implements SQLCrudManager<T> {
                 .getDatabase()
                 .createTable(
                         this.getTableName(),
-                        this.getPrimaryKeyName() + " VARCHAR(" + this.getPrimaryKeyLength() + ")," + this.getCrudableKeyTypeName() + " BLOB",
+                        this.getPrimaryKeyName() + " VARCHAR(" + this.getPrimaryKeyLength() + ")," + this.getCrudableKeyTypeName() + " LONGTEXT",
                         this.getPrimaryKeyName()
                 );
+        // tables created before 1.0 used VARCHAR(36) and BLOB, too small for profiles
+        String alter = "ALTER TABLE " + getTableName()
+                + " MODIFY " + getPrimaryKeyName() + " VARCHAR(" + getPrimaryKeyLength() + ")"
+                + ", MODIFY " + getCrudableKeyTypeName() + " LONGTEXT";
+        try (Connection connection = container.getDatabase().getConnection();
+             PreparedStatement statement = connection.prepareStatement(alter)) {
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
         if (isNewTable) {
             this.log(
                     "Create table "

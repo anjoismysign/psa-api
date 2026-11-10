@@ -1,3 +1,6 @@
+### Layout conversions, kept out of the repository ###
+/migrations/
+
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

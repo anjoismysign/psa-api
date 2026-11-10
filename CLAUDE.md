@@ -24,6 +24,9 @@ This is a Maven multi-module project requiring Java 17.
 
 - **`api`** - Core interfaces and abstractions (depends only on `aesthetic` library)
 - **`sql`** - Database implementations: MySQL and SQLite support using HikariCP
+- **`mongo`** - MongoDB implementation (`MongoDatabaseCredentials`, `MongoCrudManager`). Each Crudable is a document with `_id` = identification and Gson's fields nested; collections are named like SQL tables without `tbl` (e.g. `SerialPlayers`)
+- **`transfer`** - `psa-transfer.jar`, a standalone CLI (`list`, `backup`, `convert`, `copy`, `restore`) to back up data and move it between SQLite, MySQL and MongoDB. `convert` (and `copy --convert`) run the `LayoutConversion`s found on the classpath through `ServiceLoader`
+- **`migrations`** - gitignored, built only where it exists (the `migrations` Maven profile activates on `migrations/pom.xml`). Holds the `LayoutConversion`s for old storage layouts and shades `transfer` into `psa-migrations.jar`. Plugins only read the current layout, so when a Crudable's layout changes, add a `LayoutConversion` here instead of keeping legacy fields in the Crudable
 
 ### Core Interfaces
 

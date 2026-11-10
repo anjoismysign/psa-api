@@ -33,7 +33,8 @@ public record MySQLCrudDatabase<T extends Crudable>(
             String name = type.getSimpleName();
             String tableName = "tbl" + NamingConventions.toPascalCase(name) + "s";
             String crudableKeyTypeName = name.toUpperCase(Locale.ROOT);
-            int primaryKeyLength = 36;
+            // profile identifications are 'account:profile', two UUIDs long
+            int primaryKeyLength = 128;
             String primaryKeyName = databaseCredentials.getIdentifier().name().replace("-", "");
             return new MySQLCrudDatabase<>(
                     databaseCredentials.getHostname(),
